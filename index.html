@@ -2,20 +2,23 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <title>構成管理サーバー検証メモ</title>
-    <style>
-        body { font-family: sans-serif; line-height: 1.6; margin: 2em; }
-        h2, h3, h4 { border-bottom: 1px solid #ccc; padding-bottom: .3em; }
-        pre, code { background-color: #f9f9f9; padding: 0.2em 0.4em; }
-        table { border-collapse: collapse; width: 100%; margin: 1em 0; }
-        th, td { border: 1px solid #ccc; padding: 0.5em; }
-        th { background-color: #eee; }
-    </style>
+  <meta charset="UTF-8">
+  <title>構成管理サーバー検証メモ</title>
+  <style>
+    body { font-family: sans-serif; line-height: 1.6; margin: 2em; }
+    h2, h3, h4 { border-bottom: 1px solid #ccc; padding-bottom: .3em; }
+    table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+    th, td { border: 1px solid #ccc; padding: .5em; }
+    th { background: #eee; }
+    pre, code { background: #f9f9f9; padding: .3em; }
+    ul { margin-bottom: 1em; }
+  </style>
 </head>
 <body>
 
 <h2>構成管理サーバー検証メモ</h2>
+
+<p><strong>※ 本検証は自宅の Proxmox VE 環境上で構築した仮想マシンを使用し、RHEL 9 のインストールからミドルウェア構成までを実施。商用運用を前提とした構成の再現性・実用性を重視している。</strong></p>
 
 <h3>1. OS構成に関する検討</h3>
 
@@ -26,7 +29,7 @@
 </ul>
 
 <h4>○ インストールパターンの考慮</h4>
-<p>RHEL インストール時の「Software Selection」により、実装されるコマンド群が異なる</p>
+<p>RHEL インストール時の "Software Selection"により、実装されるコマンド群が異なる</p>
 <table>
 <tr><th>セレクション</th><th>特徴</th></tr>
 <tr><td>Minimal Install</td><td>curl はあるが、wget/git/rsync などはなし</td></tr>
@@ -35,7 +38,7 @@
 </table>
 
 <h4>○ ベースコマンド群 (最小構成の場合)</h4>
-<p>以下は実際には入っていない場合が多いため、手動追加する:</p>
+<p>以下は実際には入っていない場合が多いので、手動追加する:</p>
 <pre><code>sudo dnf install wget git jq unzip zip rsync python3-pip</code></pre>
 
 <h3>2. ミドルウェア構成</h3>
@@ -44,7 +47,7 @@
 <ul>
 <li>OpenJDK 17 (<code>java-17-openjdk-devel</code>) を選定</li>
 <li>Jenkins/GitBucket 両対応</li>
-<li>RHELの <code>java-17-openjdk</code> には <code>javac</code> が含まれないため <code>-devel</code> 必須</li>
+<li>RHELの <code>java-17-openjdk</code> には <code>javac</code>が含まれないため <code>-devel</code> 必須</li>
 </ul>
 
 <h4>○ Jenkins</h4>
@@ -79,7 +82,10 @@
 <h4>○ Python3</h4>
 <ul>
 <li>APサーバーのPythonバージョンと同じものをctrl側にも入れる方針</li>
-<li>Python3.9 (RHEL9標準)</li>
+<li>Python3.9（RHEL9標準）から 3.11 または 3.12 へのバージョンアップが検討中</li>
+<li>RHELにプリインストールされているPython（<code>/usr/bin/python3</code>）を置き換えるのではなく、<code>/opt/python3.11</code> など別パスにインストールする方法を推奨</li>
+<li>システム依存のPython環境を壊さないためにも、<code>alternatives</code> コマンドで <code>python3</code> を切り替える場合は慎重に実施</li>
+<li>バージョンアップ時に古いPythonやモジュールの残骸（<code>~/.local/</code>, <code>/usr/local/lib/python3.x/</code> など）が競合することがあるため、仮想環境（<code>venv</code>, <code>pyenv</code>, <code>conda</code> など）の使用も検討</li>
 </ul>
 
 <h4>○ Maven</h4>
@@ -102,16 +108,16 @@
 
 <h3>3. 顧客へ確認すべき仕様項目（未確定）</h3>
 <ul>
-<li>OSインストール時の選択内容（Software Selection）</li>
-  <ul>
-    <li>Minimal構成か？ Server構成か？ GUIの有無？</li>
-  </ul>
-<li>Node.js の導入目的は何か？（Webビルド、SSR、npm利用など）</li>
-<li>Apache (httpd) の用途は？（Pythonアプリの逆プロキシか、静的ファイル配信か）</li>
-<li>Maven 導入の目的は？（Jenkinsプラグイン開発か、JavaツールCI用か、GitBucketビルド用か）</li>
-<li>Pythonアプリとその実行環境におけるバージョン要件（3.9のままで良いか）</li>
-<li>PostgreSQLのバージョン要件と、既存DBとの互換性確認は必要か？</li>
-<li>Jenkins/GitBucket は公式のWARファイル運用でよいか、それとも自社ビルド前提か？</li>
+  <li>OSインストール時の選択内容（Software Selection）
+    <ul>
+      <li>Minimal構成か？ Server構成か？ GUIの有無？</li>
+    </ul>
+  </li>
+  <li>Node.js の導入目的は何か？（Webビルド、SSR、npm利用など）</li>
+  <li>Apache (httpd) の用途は？（Pythonアプリの逆プロキシか、静的ファイル配信か）</li>
+  <li>Maven 導入の目的は？（Jenkinsプラグイン開発か、JavaツールCI用か、GitBucketビルド用か）</li>
+  <li>PostgreSQLのバージョン要件と、既存DBとの互換性確認は必要か？</li>
+  <li>Jenkins/GitBucket は公式のWARファイル運用でよいか、それとも自社ビルド前提か？</li>
 </ul>
 
 </body>
