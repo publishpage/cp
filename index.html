@@ -6,11 +6,11 @@
     <title>構成管理サーバー検証メモ</title>
     <style>
         body { font-family: sans-serif; line-height: 1.6; margin: 2em; }
-        h2, h3 { border-bottom: 1px solid #ccc; padding-bottom: .3em; }
-        code, pre { background: #f5f5f5; padding: .3em; }
+        h2, h3, h4 { border-bottom: 1px solid #ccc; padding-bottom: .3em; }
+        pre, code { background-color: #f9f9f9; padding: 0.2em 0.4em; }
         table { border-collapse: collapse; width: 100%; margin: 1em 0; }
-        th, td { border: 1px solid #ccc; padding: .5em; }
-        th { background: #eee; }
+        th, td { border: 1px solid #ccc; padding: 0.5em; }
+        th { background-color: #eee; }
     </style>
 </head>
 <body>
@@ -22,15 +22,16 @@
 <h4>○ バージョン選定</h4>
 <ul>
 <li>RHEL 9系（現時点で 9.5 が自動アップデートにより導入される）</li>
-<li>商用を前提とした安定性重視のため、Developer Subscription による検証を行う</li>
+<li>商用を前提とした安定性重視のため、Developer Subscription により検証を行った（自宅環境）</li>
 </ul>
 
 <h4>○ インストールパターンの考慮</h4>
+<p>RHEL インストール時の「Software Selection」により、実装されるコマンド群が異なる</p>
 <table>
 <tr><th>セレクション</th><th>特徴</th></tr>
 <tr><td>Minimal Install</td><td>curl はあるが、wget/git/rsync などはなし</td></tr>
 <tr><td>Server with GUI</td><td>GNOME/多くのツールが編集される</td></tr>
-<tr><td>Server</td><td>CLI基本構成。必須ツールは欠けがち</td></tr>
+<tr><td>Server</td><td>CLI基本構成。必須ツールは缺けがち</td></tr>
 </table>
 
 <h4>○ ベースコマンド群 (最小構成の場合)</h4>
@@ -97,6 +98,20 @@
 <h4>○ cron</h4>
 <ul>
 <li>RHELは標準で <code>cronie</code> が実装されており別途導入は不要</li>
+</ul>
+
+<h3>3. 顧客へ確認すべき仕様項目（未確定）</h3>
+<ul>
+<li>OSインストール時の選択内容（Software Selection）</li>
+  <ul>
+    <li>Minimal構成か？ Server構成か？ GUIの有無？</li>
+  </ul>
+<li>Node.js の導入目的は何か？（Webビルド、SSR、npm利用など）</li>
+<li>Apache (httpd) の用途は？（Pythonアプリの逆プロキシか、静的ファイル配信か）</li>
+<li>Maven 導入の目的は？（Jenkinsプラグイン開発か、JavaツールCI用か、GitBucketビルド用か）</li>
+<li>Pythonアプリとその実行環境におけるバージョン要件（3.9のままで良いか）</li>
+<li>PostgreSQLのバージョン要件と、既存DBとの互換性確認は必要か？</li>
+<li>Jenkins/GitBucket は公式のWARファイル運用でよいか、それとも自社ビルド前提か？</li>
 </ul>
 
 </body>
