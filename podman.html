@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>GitBucket運用方式に関する技術報告書</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      line-height: 1.6;
+      margin: 40px;
+      color: #333;
+    }
+    h1, h2 {
+      color: #2a4d69;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #999;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f0f0f0;
+    }
+  </style>
+</head>
+<body>
+  <h1>GitBucket運用方式に関する技術報告書</h1>
+
+  <p>
+    本報告書では、構成管理サーバーにおけるGitBucketの運用方式について、<br>
+    ネイティブインストール方式とコンテナ（Podman）方式を比較し、構築および保守運用面での最適な選択肢についてご提案いたします。
+  </p>
+
+  <h2>背景</h2>
+  <p>
+    GitBucketはJavaベースの自己完結型Gitサーバーであり、シンプルな構成で導入可能な一方、運用方式によってメンテナンス性や再現性に差が出ます。<br>
+    今回の構成管理サーバーはRHELベースであり、Red Hat系で標準推奨されているPodmanを活用した運用方式が適しています。
+  </p>
+
+  <h2>提案概要</h2>
+  <p>
+    GitBucketについては、他サービス（Jenkins、PostgreSQL等）と独立した構成であることから、<br>
+    コンテナ（Podman）による運用とすることで、構築効率・更新性・再現性・保守性のいずれにも明確な利点が見込まれます。<br>
+    そのため、本構成においてはGitBucketのみコンテナ運用とすることを提案いたします。
+  </p>
+
+  <h2>運用方式比較表</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>観点</th>
+        <th>コンテナ運用（Podman）</th>
+        <th>ネイティブ運用（Java + .war）</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>導入の速さ</td><td>`podman run` 一発で完結</td><td>Java導入＋`.war`ダウンロード＋起動設定</td></tr>
+      <tr><td>再現性・構成管理</td><td>起動コマンドで構成を明示</td><td>手順書ベース、属人化しやすい</td></tr>
+      <tr><td>バージョン管理</td><td>Docker Hubからタグ指定可能</td><td>GitHubから`.war`を手動取得</td></tr>
+      <tr><td>更新作業の簡便さ</td><td>`podman pull` で済む</td><td>`.war`差し替え＋再起動が必要</td></tr>
+      <tr>
+        <td>systemd連携</td>
+        <td>
+          `podman generate systemd` で `.service` ファイルを自動生成可能。<br>
+          起動、再起動、自動起動などを標準のsystemctl操作で管理でき、構成の明示性と保守性が高い。
+        </td>
+        <td>
+          `.service` ファイルを手作業で作成・設置する必要がある。<br>
+          ユーザーや実行パスの指定ミス、ログ出力先の調整、環境変数の設定漏れなど、
+          運用開始前に慎重なチューニングとテストが求められる。
+        </td>
+      </tr>
+      <tr>
+        <td>データ保存の明示性</td>
+        <td>
+          `-v /srv/gitbucket:/root/.gitbucket` などで明示的に永続化パスを指定できる。<br>
+          サーバー内のディレクトリ構成に統一感を持たせやすく、バックアップや監査も容易。
+        </td>
+        <td>
+          デフォルトでは `~/.gitbucket` に保存され、ユーザーのホームディレクトリ直下にデータが生成される。<br>
+          意識して `--gitbucket.home` を指定しない限り散らかりやすく、場所の特定や移行時の対応が煩雑になる。
+        </td>
+      </tr>
+      <tr><td>ホスト環境への影響</td><td>Java不要、完全分離</td><td>Java依存がホストと干渉する可能性</td></tr>
+      <tr><td>復旧・再構築のしやすさ</td><td>即時復元可能</td><td>環境再構成が必要</td></tr>
+      <tr><td>公式サポートとの親和性</td><td>PodmanはRed Hat推奨、OCI準拠</td><td>自己管理・非公式手順に依存</td></tr>
+      <tr><td>学習・共有コスト</td><td>Podman操作が必要</td><td>操作は単純だが属人化リスクあり</td></tr>
+    </tbody>
+  </table>
+
+  <h2>結論</h2>
+  <p>
+    GitBucketに関しては、Podmanによるコンテナ構成の方が、導入から保守まで一貫してメリットが大きく、<br>
+    本プロジェクトにおいても構成の独立性を保ちつつ最小コストで運用が可能であると判断します。<br>
+    よって、GitBucketは他構成と切り離し、コンテナ構成を適用することを提案いたします。
+  </p>
+</body>
+</html>
