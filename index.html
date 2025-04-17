@@ -1,0 +1,103 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>構成管理サーバー検証メモ</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; margin: 2em; }
+        h2, h3 { border-bottom: 1px solid #ccc; padding-bottom: .3em; }
+        code, pre { background: #f5f5f5; padding: .3em; }
+        table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+        th, td { border: 1px solid #ccc; padding: .5em; }
+        th { background: #eee; }
+    </style>
+</head>
+<body>
+
+<h2>構成管理サーバー検証メモ</h2>
+
+<h3>1. OS構成に関する検討</h3>
+
+<h4>○ バージョン選定</h4>
+<ul>
+<li>RHEL 9系（現時点で 9.5 が自動アップデートにより導入される）</li>
+<li>商用を前提とした安定性重視のため、Developer Subscription による検証を行う</li>
+</ul>
+
+<h4>○ インストールパターンの考慮</h4>
+<table>
+<tr><th>セレクション</th><th>特徴</th></tr>
+<tr><td>Minimal Install</td><td>curl はあるが、wget/git/rsync などはなし</td></tr>
+<tr><td>Server with GUI</td><td>GNOME/多くのツールが編集される</td></tr>
+<tr><td>Server</td><td>CLI基本構成。必須ツールは欠けがち</td></tr>
+</table>
+
+<h4>○ ベースコマンド群 (最小構成の場合)</h4>
+<p>以下は実際には入っていない場合が多いため、手動追加する:</p>
+<pre><code>sudo dnf install wget git jq unzip zip rsync python3-pip</code></pre>
+
+<h3>2. ミドルウェア構成</h3>
+
+<h4>○ JDK</h4>
+<ul>
+<li>OpenJDK 17 (<code>java-17-openjdk-devel</code>) を選定</li>
+<li>Jenkins/GitBucket 両対応</li>
+<li>RHELの <code>java-17-openjdk</code> には <code>javac</code> が含まれないため <code>-devel</code> 必須</li>
+</ul>
+
+<h4>○ Jenkins</h4>
+<ul>
+<li>最新LTS (2.426.x)</li>
+<li>Java 17 対応。プラグイン互換性が高い</li>
+</ul>
+
+<h4>○ GitBucket</h4>
+<ul>
+<li>最新 stable バージョン (ex. v4.40.0)</li>
+<li>少ないリソースで動作。Java 17 でも動作確認</li>
+</ul>
+
+<h4>○ Node.js</h4>
+<ul>
+<li>用途不明のため保留</li>
+<li>Webビルドツール/フロント系の含み込みの有無確認必要</li>
+</ul>
+
+<h4>○ Apache (httpd)</h4>
+<ul>
+<li>2.4系 RHEL標準パッケージを使用前提</li>
+</ul>
+
+<h4>○ PostgreSQL</h4>
+<ul>
+<li>v15 を前提 (LTS)</li>
+<li>RHEL標準は v13 のため PGDG リポジトリの利用を検討</li>
+</ul>
+
+<h4>○ Python3</h4>
+<ul>
+<li>APサーバーのPythonバージョンと同じものをctrl側にも入れる方針</li>
+<li>Python3.9 (RHEL9標準)</li>
+</ul>
+
+<h4>○ Maven</h4>
+<ul>
+<li>JenkinsパイプラインでJava製資産をCIする場合を想定</li>
+<li>Jenkins/個別プラグインのビルドや自社製ツールのビルド用途</li>
+<li><code>dnf install maven</code> で導入可</li>
+</ul>
+
+<h4>○ CLIユーティリティ</h4>
+<ul>
+<li>jq, wget, unzip, git, rsync, curl, zip など、最小構成には含まれない場合が多いため、分別に導入</li>
+<li>これらは CI/CD で必要となりがち</li>
+</ul>
+
+<h4>○ cron</h4>
+<ul>
+<li>RHELは標準で <code>cronie</code> が実装されており別途導入は不要</li>
+</ul>
+
+</body>
+</html>
